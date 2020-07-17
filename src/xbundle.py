@@ -15,6 +15,9 @@
 # The XBundle class represents an xbundle file; it can read and write
 # the file, and it can import and export to standard edX (unbundled) format.
 
+from __future__ import absolute_import
+from __future__ import print_function
+from __future__ import unicode_literals
 import os
 import sys
 import re
@@ -23,7 +26,7 @@ import glob
 
 from lxml import etree
 from lxml.html.soupparser import fromstring as fsbs
-from path import path	# needs path.py
+from path import Path
 
 #-----------------------------------------------------------------------------
 
@@ -209,7 +212,7 @@ class XBundle(object):
         and also normalize url_name filenames (and make them
         meaningfully human readable).
         '''
-        dir = path(dir)
+        dir = Path(dir)
         self.metadata = etree.Element('metadata')
         self.import_metadata_from_directory(dir)
         self.import_course_from_directory(dir)
@@ -218,11 +221,11 @@ class XBundle(object):
     def import_metadata_from_directory(self, dir):
         # load policies
         # print "ppath = ", (path(dir) / 'policies/*')
-        for pdir in glob.glob(path(dir) / 'policies/*'):
+        for pdir in glob.glob(Path(dir) / 'policies/*'):
             # print "pdir=",pdir
             policies = etree.Element('policies')
             policies.set('semester',os.path.basename(pdir))
-            for fn in glob.glob(path(pdir) / '*.json'):
+            for fn in glob.glob(Path(pdir) / '*.json'):
                 x = etree.SubElement(policies,os.path.basename(fn).replace('_','').replace('.json',''))
                 x.text = open(fn).read()
             self.add_policies(policies)
@@ -234,7 +237,7 @@ class XBundle(object):
                 
     def import_course_from_directory(self, dir):
         '''load course tree, removing intermediate descriptors with url_name'''
-        dir = path(dir)
+        dir = Path(dir)
         x = etree.parse(dir / 'course.xml').getroot()
         semester = x.get('url_name','')		# the url_name of <course> is special - the semester
         cxml = self.import_xml_removing_descriptor(dir, x)
@@ -321,8 +324,8 @@ class XBundle(object):
             try:
                 dxml = etree.parse(dir / fn, **options).getroot()
             except Exception as err:
-                print "Error!  Can't load and parse HTML file %s, error:" % (dir/xml.tag/fn)
-                print err
+                print("Error!  Can't load and parse HTML file %s, error:" % (dir/xml.tag/fn))
+                print(err)
             if 'xmlns' in dxml.attrib:
                 dxml.attrib.pop('xmlns')
             dxml.attrib.update(xml.attrib)
@@ -357,7 +360,7 @@ class XBundle(object):
 
         # print self.pp_xml(self.export)
 
-        self.dir = self.mkdir(path(exdir) / self.course_id())
+        self.dir = self.mkdir(Path(exdir) / self.course_id())
         self.export_meta_to_directory()
         self.export_xml_to_directory(self.export[0])
 
@@ -435,7 +438,7 @@ class XBundle(object):
 
 
     def errlog(self, msg):
-        print msg
+        print(msg)
         
 
     def mkdir(self,p):
@@ -446,8 +449,10 @@ class XBundle(object):
 
 
     def pp_xml(self,xml):
-        os.popen('xmllint --format -o tmp.xml -','w').write(etree.tostring(xml))
-        return open('tmp.xml').read()
+        p = os.popen('xmllint --format -o tmp.xml -', 'w')
+        p.write(etree.tostring(xml).decode('utf-8'))
+        p.close()
+        return open('./tmp.xml').read()
 
 
     def make_urlname(self, xml, parent=''):
@@ -467,7 +472,7 @@ class XBundle(object):
                }
         for m,v in map.items():
             for ch in m:
-                s = s.replace(ch,v)
+                s = s.replace(ch.encode(), v.encode())
         if dn and s in self.urlnames and parent:
             s += '_' + parent
         while s in self.urlnames:
@@ -528,7 +533,7 @@ def RunTests():
     class TestXBundle(unittest.TestCase):
         def testRoundTrip(self):
 
-            print "Testing XBundle round trip import -> export"
+            print("Testing XBundle round trip import -> export")
             xb = XBundle()
             cxmls = '''
 <course semester="2013_Spring" course="mitx.01">
@@ -569,10 +574,10 @@ def RunTests():
             xbreloaded = str(xb2)
 
             if not xbin==xbreloaded:
-                print "xbin"
-                print xbin
-                print "xbreloaded"
-                print xbreloaded
+                print("xbin")
+                print(xbin)
+                print("xbreloaded")
+                print(xbreloaded)
 
             self.assertEqual(xbin,xbreloaded)
 
@@ -587,17 +592,17 @@ def RunTests():
 if __name__=='__main__':
 
     def usage():
-        print "Usage: python xbundle.py [--force-studio] [cmd] [infn] [outfn]"
-        print "where:"
-        print "  cmd = test:    run unit tests"
-        print "  cmd = convert: convert between xbundle and edX directory format"
-        print "                 the xbundle filename must end with .xml"
-        print "  --force-studio forces <sequential> to always be followed by <vertical> in export"
-        print "                 this makes it compatible with Studio import"
-        print ""
-        print "examples:"
-        print "  python xbundle.py convert ../data/edx4edx edx4edx_xbundle.xml"
-        print "  python xbundle.py convert edx4edx_xbundle.xml ./"
+        print("Usage: python xbundle.py [--force-studio] [cmd] [infn] [outfn]")
+        print("where:")
+        print("  cmd = test:    run unit tests")
+        print("  cmd = convert: convert between xbundle and edX directory format")
+        print("                 the xbundle filename must end with .xml")
+        print("  --force-studio forces <sequential> to always be followed by <vertical> in export")
+        print("                 this makes it compatible with Studio import")
+        print("")
+        print("examples:")
+        print("  python xbundle.py convert ../data/edx4edx edx4edx_xbundle.xml")
+        print("  python xbundle.py convert edx4edx_xbundle.xml ./")
 
     argc = 1
     options = dict(keep_urls=True)
@@ -616,11 +621,11 @@ if __name__=='__main__':
         outfn = sys.argv[argc+1]
         xb = XBundle(**options)
         if infn.endswith('.xml'):
-            print "Converting xbundle file '%s' to edX xml directory '%s'" % (infn, outfn)
+            print("Converting xbundle file '%s' to edX xml directory '%s'" % (infn, outfn))
             xb.load(infn)
             xb.export_to_directory(outfn)
         elif outfn.endswith('.xml'):
-            print "Converting edX xml directory '%s' to xbundle file '%s'" % (infn, outfn)
+            print("Converting edX xml directory '%s' to xbundle file '%s'" % (infn, outfn))
             xb.import_from_directory(infn)
             xb.save(outfn)
         else:
