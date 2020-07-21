@@ -6,8 +6,11 @@
 # Used in translating LON-CAPA problems to i4x problem specification language.
 
 from __future__ import division
+from __future__ import absolute_import
+from __future__ import unicode_literals
 import random
 import math
+from six.moves import range
 
 
 def lc_random(lower, upper, stepsize):
@@ -25,11 +28,11 @@ def lc_choose(index, *args):
     '''
     try:
         return args[int(index) - 1]
-    except Exception, err:
+    except Exception as err:
         pass
     if len(args):
         return args[0]
-    raise Exception, "loncapa_check.lc_choose error, index=%s, args=%s" % (index, args)
+    raise Exception("loncapa_check.lc_choose error, index=%s, args=%s" % (index, args))
 
 deg2rad = math.pi / 180.0
 rad2deg = 180.0 / math.pi

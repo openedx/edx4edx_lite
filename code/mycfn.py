@@ -1,5 +1,11 @@
+from __future__ import absolute_import
+from __future__ import unicode_literals
+import base64
+import io
 import pylab
-import base64, urllib, StringIO
+import six
+import six.moves.urllib.request, six.moves.urllib.parse, six.moves.urllib.error
+from six.moves import range
 
 def test_add_to_ten(expect,ans):
   a1=float(ans[0])
@@ -22,7 +28,7 @@ def test_plot(expect, ans, options=0):
   except Exception as err:
     msg = "Sorry, cannot evaluate your expression, err=%s" % str(err).replace('<','&lt;')
     return dict(ok=False, msg=msg)
-  imgdata = StringIO.StringIO()
+  imgdata = six.StringIO()
 
   fig = pylab.figure()
   ax = fig.add_subplot(111)
@@ -33,7 +39,7 @@ def test_plot(expect, ans, options=0):
   pylab.close()
 
   imgdata.seek(0)  # rewind the data
-  uri = 'data:image/png;base64,' + urllib.quote(base64.b64encode(imgdata.buf))
+  uri = 'data:image/png;base64,' + six.moves.urllib.parse.quote(base64.b64encode(imgdata.buf))
   msg = '<html><img src = "%s"/>' % uri
 
   area = sum(yd)/(1.0*len(xd))
