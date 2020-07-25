@@ -239,7 +239,7 @@ class XBundle(object):
         '''load course tree, removing intermediate descriptors with url_name'''
         dir = Path(dir)
         x = etree.parse(dir / 'course.xml').getroot()
-        semester = x.get('url_name','')     # the url_name of <course> is special - the semester
+        semester = x.get('url_name','')  # the url_name of <course> is special - the semester
         cxml = self.import_xml_removing_descriptor(dir, x)
         cxml.set('semester',semester)
         self.course = cxml
@@ -268,7 +268,7 @@ class XBundle(object):
             for seq in sect.findall('.//sequential'):
                 for k in seq:
                     seq.addprevious(k)
-                sect.remove(seq)        # remove sequential from inside section
+                sect.remove(seq)  # remove sequential from inside section
             sect.tag = 'sequential'
         
 
@@ -280,7 +280,7 @@ class XBundle(object):
         ndigits = len([z for z in un if z in string.digits])        
         if ndigits<6:
             return True
-        return False    # ie seems to be random
+        return False  # ie seems to be random
 
         
     def import_xml_removing_descriptor(self, dir, xml):
@@ -299,15 +299,16 @@ class XBundle(object):
             dxml.attrib.update(xml.attrib)
             dxml.attrib.pop('url_name')
             if self.keep_urls and self.is_not_random_urlname(un):
-                dxml.set('url_name_orig', un)   # keep url_name as url_name_orig
+                dxml.set('url_name_orig', un)  # keep url_name as url_name_orig
             if dxml.tag in self.DescriptorTags and dxml.get('display_name') is None:
                 if not dxml.tag=='course':  # special case: don't add display_name to course
                     dxml.set('display_name',un)
             xml = dxml
 
         fn = xml.get('filename','')
-        if xml.tag in ['html','problem'] and fn: # special for <html filename="..." display_name="..."/>
-                                                 # and <problem filename="...">
+        if xml.tag in ['html','problem'] and fn:
+            # special for <html filename="..." display_name="..."/>
+            # and <problem filename="...">
             if xml.tag=='html':
                 if not fn.endswith('.html'):
                     fn += '.html'
@@ -335,9 +336,9 @@ class XBundle(object):
             xml = dxml
             
         for child in xml:
-            dchild = self.import_xml_removing_descriptor(dir, child)    # recurse
+            dchild = self.import_xml_removing_descriptor(dir, child)  # recurse
             if not dchild==child:
-                child.addprevious(dchild)   # replace descriptor with contents
+                child.addprevious(dchild)  # replace descriptor with contents
                 xml.remove(child)
         return xml
 
@@ -413,13 +414,13 @@ class XBundle(object):
         #print elem
         if elem.tag=='descriptor':
             # print "--> %s" % list(elem)
-            self.export_xml_to_directory(elem[0])   # recurse on children, depth first
+            self.export_xml_to_directory(elem[0])  # recurse on children, depth first
             elem.tag = elem.get('tag')
             elem.set('url_name',elem.get('url_name'))
             elem.attrib.pop('tag')
-            # self.export_xml_to_directory(elem)    # recurse on this tag
+            # self.export_xml_to_directory(elem)  # recurse on this tag
 
-        elif elem.tag==etree.Comment:           # comment <!-- foo -->
+        elif elem.tag==etree.Comment:  # comment <!-- foo -->
             pass
 
         elif elem.get('url_name') is None:
@@ -428,8 +429,8 @@ class XBundle(object):
         else:
             if elem.findall('.//descriptor'):
                 for k in elem:
-                    self.export_xml_to_directory(k)     # recurse on children
-            write_xml(elem)                     # write to file and remove from parent
+                    self.export_xml_to_directory(k)  # recurse on children
+            write_xml(elem)  # write to file and remove from parent
             elem.getparent().remove(elem)
 
 
@@ -460,7 +461,7 @@ class XBundle(object):
         s = dn
         if not s:
             xmlp = xml.getparent()
-            s = xmlp.get('display_name','') # if no display_name, try to use parent's
+            s = xmlp.get('display_name','')  # if no display_name, try to use parent's
             if not s:
                 s = xmlp.tag
         s += " " + xml.tag
@@ -517,12 +518,12 @@ class XBundle(object):
                     vert = etree.Element('vertical')
                     elem.addprevious(vert)
                     vert.append(elem)
-                    elem = vert         # continue processing on the vertical
+                    elem = vert  # continue processing on the vertical
             if elem.tag in self.DescriptorTags and not elem.get('url_name',''):
                 desc = self.make_descriptor(elem, parent=parent)
                 elem.addprevious(desc)
-                desc.append(elem)       # move descriptor to become new parent of elem
-                self.add_descriptors(elem, desc.get('url_name'))    # recurse
+                desc.append(elem)  # move descriptor to become new parent of elem
+                self.add_descriptors(elem, desc.get('url_name'))  # recurse
 
 #-----------------------------------------------------------------------------
 # tests
